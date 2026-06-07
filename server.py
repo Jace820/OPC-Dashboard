@@ -28,6 +28,42 @@ def load_config():
         return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
     return {"port": 8090, "host": "0.0.0.0", "theme": "dark"}
 
+def get_wiki_path():
+    """从 config 读取 wiki 路径，默认 ./wiki"""
+    cfg = load_config()
+    wiki_path = cfg.get("wiki_path", "./wiki")
+    if wiki_path.startswith("./") or wiki_path.startswith("../"):
+        return (BASE / wiki_path).resolve()
+    return Path(wiki_path).expanduser().resolve()
+
+
+def _init_wiki_structure(wiki_base: Path):
+    """初始化 wiki 九层目录结构"""
+    layers = {
+        "L1 index.md": "# Wiki Index\n\nOPC 团队共同记忆系统。\n",
+        "L2 schema.md": "# Schema\n\nWiki 结构定义。\n",
+        "L3 system": None,
+        "L4 projects": None,
+        "L5 pages": None,
+        "L6 raw": None,
+        "L7 assets": None,
+        "L8 links.json": "{}",
+        "L9 CHANGELOG.md": "# Changelog\n\n",
+    }
+    for name, content in layers.items():
+        path = wiki_base / name
+        if content is None:
+            path.mkdir(parents=True, exist_ok=True)
+        else:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
+    (wiki_base / "L3 system" / "workflow.md").write_text(
+        "# 工作流规范\n\n## 规则\n- 任务通过 active-tasks.json 分发\n- 完成后更新任务状态\n", encoding="utf-8")
+    (wiki_base / "L3 system" / "active-tasks.json").write_text(
+        '{"projects": []}', encoding="utf-8")
+    print(f"✅ Wiki 结构已初始化: {wiki_base}")
+
+
 config = load_config()
 
 app = FastAPI(title="OPC Dashboard")
@@ -144,14 +180,8 @@ async def scan_agents():
                 hermes_model = hc["model"].get("default", hermes_model)
         except: pass
 
-    # ── Agent 检测清单 ──
-    # 每个 Agent 定义：名称、检测命令、额外路径、角色信息
-
-    # Bojack — Hermes 宿主，始终存在
-    found.append({"id": "hermes", "name": "Bojack", "role": "协调员",
-                   "icon": "🎯", "color": "#FFAB40", "type": "agent",
-                   "runtime": "Hermes Agent", "model": hermes_model, "provider": "DeepSeek",
-                   "status": "可用"})
+    # 检测清单 — 按名称检测本地 AI Agent
+    # 用户可以通过 config.json 自定义更多 Agent
 
     # Codex — OpenAI Codex CLI
     if find_command("codex"):
@@ -199,10 +229,16 @@ async def setup_agent(data: dict):
     cfg["agents"][agent_id]["active"] = True
     CONFIG_FILE.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    # 写入 wiki L3 system/ 目录
-    wiki_system = Path.home() / "Documents" / "Hermes" / "workspace" / "opc-wiki" / "L3 system"
-    agent_file = wiki_system / f"agent-{agent_id}.md"
+    # Wiki 路径（可配置）
+    wiki_base = get_wiki_path()
+    wiki_system = wiki_base / "L3 system"
+
+    # 首次使用时自动初始化 wiki 结构
+    if not wiki_base.exists():
+        _init_wiki_structure(wiki_base)
+
     wiki_system.mkdir(parents=True, exist_ok=True)
+    agent_file = wiki_system / f"agent-{agent_id}.md"
     agent_file.write_text(f"""---
 title: "{agent_name} — OPC 团队成员"
 type: system
@@ -276,7 +312,8 @@ async def deactivate_agent(data: dict):
     agent_name = agent.get("name", agent_id)
 
     # 删除 wiki L3 system/ 下的 agent 文件
-    wiki_system = Path.home() / "Documents" / "Hermes" / "workspace" / "opc-wiki" / "L3 system"
+    wiki_base = get_wiki_path()
+    wiki_system = wiki_base / "L3 system"
     if wiki_system.exists():
         for md_file in wiki_system.glob(f"agent-{agent_id}*.md"):
             try:

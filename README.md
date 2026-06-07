@@ -1,11 +1,9 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/OPC-Dashboard-FFAB40?style=for-the-badge" alt="OPC Dashboard" />
-</p>
-
-<h1 align="center">OPC Dashboard</h1>
-<p align="center">
-  <strong>Multi-Agent Team Collaboration Dashboard</strong><br>
-  Real-time project tracking · Agent status monitoring · Activity timeline
+  <h1 align="center">OPC Dashboard</h1>
+  <p align="center">
+    <strong>Multi-Agent Team Collaboration Platform</strong><br>
+    Real-time monitoring · One-click wiki integration · Auto workflow orchestration
+  </p>
 </p>
 
 <p align="center">
@@ -17,51 +15,64 @@
 
 ---
 
-## Overview
+## What is OPC Dashboard?
 
-A real-time dashboard for monitoring and managing multi-agent AI teams. Built for the **OPC** (Orchestrator-Planning-Coding) workflow with four specialized agents:
+A **platform** for managing AI agent teams. You add your own agents — the dashboard handles the rest:
 
-| Agent | Role | Runtime |
-|-------|------|---------|
-| 🎯 **Bojack** | Orchestrator — task decomposition, delegation, quality review | Hermes Agent |
-| 🔬 **Athena** | Researcher — multi-source verification, hallucination reduction | Claude Code |
-| ✍️ **Mercury** | Writer — information architecture, documentation | Claude Code |
-| 🔨 **Codex** | Builder — implementation, debugging, testing, delivery | Codex CLI |
+- 🔍 **Scan & Add** — Auto-detect AI agents installed on your machine (Codex CLI, Claude Code, Aider…)
+- ⚡ **One-Click Activate** — Activate an agent and it's automatically integrated into the shared wiki memory system
+- 🧠 **Wiki Memory** — Each activated agent gets a memory file in the 9-layer wiki. Cross-agent knowledge sharing, zero config.
+- 📡 **Real-Time Sync** — WebSocket push on every status change. No manual refresh.
+- 🎨 **Dark/Light Theme** — Instant switch via CSS variables.
 
-## Features
-
-- ⚡ **Real-Time Agent Status** — Working/idle indicators with pulse animations
-- 📊 **Project Categories** — Expandable two-level hierarchy with progress bars
-- 🔧 **One-Click Agent Setup** — Scan local AI agents, add to team with auto wiki integration
-- 🔌 **Activate/Deactivate** — Toggle agents in/out of workflow, auto-clean wiki memory
-- 🎨 **Dark/Light Theme** — Instant theme switching via CSS variables
-- 📡 **WebSocket Push** — Auto-refresh on project data changes (2s polling)
-- ⚙️ **Settings Panel** — Manage agents, categories, data sources in a slide-out panel
-- 🧠 **Wiki Integration** — Shared OPC wiki for cross-agent memory (9-layer structure)
+> **Key advantage**: When you activate an agent, the dashboard automatically writes it into the wiki memory system and updates shared config — no manual setup needed.
 
 ## Quick Start
 
 ```bash
-# 1. Clone
-git clone https://github.com/YOUR_USERNAME/opc-dashboard.git
-cd opc-dashboard
-
-# 2. Setup
-chmod +x setup.sh
+git clone https://github.com/Jace820/OPC-Dashboard.git
+cd OPC-Dashboard
+cp config.example.json config.json
 ./setup.sh
-
-# 3. Start
 python3 server.py
-
-# 4. Open
-open http://localhost:8090
+# Open http://localhost:8090
 ```
 
-Or with the Hermes venv:
+**Then:**
+1. Open Settings (`⌘,`) → **Agent** tab → **🔍 扫描本地 Agent**
+2. Click to add detected agents
+3. Click **🔧 一键接入** to activate → wiki memory auto-created ✨
 
-```bash
-~/.local/share/hermes-agent-venv/bin/python server.py
+## How Wiki Integration Works
+
 ```
+New user clones repo → setup.sh creates wiki/ structure
+     ↓
+User scans agents → adds to config
+     ↓
+Clicks "🔧 一键接入" → server auto-creates:
+  wiki/L3 system/agent-{name}.md   ← agent memory file
+  wiki/L3 system/active-tasks.json ← shared task queue
+     ↓
+Agent is now part of the workflow — 
+other agents can read its memory, share tasks
+```
+
+All wiki paths are configurable in `config.json`:
+```json
+{ "wiki_path": "./wiki" }
+```
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| **Agent Cards** | Real-time status, role, model, provider — colorful identity badges |
+| **Activate/Deactivate** | Toggle agents in/out. Deactivation auto-cleans wiki memory |
+| **Settings Panel** | 6-tab slide-out: manage agents, categories, data sources, theme |
+| **Project Tracking** | Expandable category→project hierarchy with progress bars |
+| **WebSocket Push** | Auto-refresh on any data change (2s polling fallback) |
+| **Local Scan** | Detects AI agents in PATH, venvs, homebrew — multi-strategy search |
 
 ## Architecture
 
@@ -69,67 +80,43 @@ Or with the Hermes venv:
 opc-dashboard/
 ├── server.py              # FastAPI: REST + WebSocket + auto-sync
 ├── sync.py                # Project data sync engine
-├── requirements.txt       # Python dependencies (fastapi, uvicorn, websockets)
-├── setup.sh               # One-command deployment script
-├── config.example.json    # Configuration template
+├── setup.sh               # One-command: install + build + wiki init
+├── config.example.json    # Template → copy to config.json
+├── requirements.txt       # fastapi, uvicorn
+├── wiki/                  # Auto-generated wiki memory (gitignored)
 └── frontend/              # Vite + React
     ├── src/
-    │   ├── App.jsx                    # Main layout + theme + data merge
-    │   ├── hooks/useWebSocket.js      # WebSocket auto-reconnect
+    │   ├── App.jsx                    # Theme + data merge
+    │   ├── hooks/useWebSocket.js      # WebSocket reconnect
     │   └── components/
-    │       ├── AgentCards.jsx         # Agent status cards + activate/deactivate
-    │       ├── ProjectList.jsx        # Expandable project hierarchy
-    │       ├── ActiveTasks.jsx        # Task cards with agent assignment
-    │       └── Settings.jsx           # Settings panel (6 tabs)
-    └── electron/          # Electron desktop app wrapper (WIP)
+    │       ├── AgentCards.jsx         # Status + activate/deactivate
+    │       ├── ProjectList.jsx        # Expandable hierarchy
+    │       ├── Settings.jsx           # 6-tab settings panel
+    │       └── ...
+    └── electron/          # Desktop app wrapper (WIP)
 ```
 
-## API Endpoints
+## API
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/data` | Dashboard data (categories + agent status) |
-| GET | `/api/config` | Current configuration |
-| POST | `/api/config` | Update configuration (merge-safe) |
-| PATCH | `/api/agent/{id}` | Update single agent field |
-| POST | `/api/setup-agent` | Activate agent + create wiki memory |
-| POST | `/api/deactivate-agent` | Deactivate agent + clean wiki |
-| GET | `/api/scan` | Scan local file system for AI agents |
-| WS | `/ws` | WebSocket for live data push |
-
-## Configuration
-
-Copy `config.example.json` to `config.json` and customize:
-
-```json
-{
-  "port": 8090,
-  "theme": "dark",
-  "agents": {
-    "bojack": { "name": "Bojack", "role": "协调员", "active": true, ... },
-    "athena": { "name": "Athena", "role": "研究员", "active": true, ... },
-    ...
-  }
-}
-```
-
-Or use the **Settings panel** (`⌘,`) to scan and manage agents interactively.
+| `GET` | `/api/data` | Dashboard data |
+| `GET` | `/api/config` | Current config |
+| `POST` | `/api/config` | Update config (merge-safe) |
+| `PATCH` | `/api/agent/{id}` | Update single agent field |
+| `POST` | `/api/setup-agent` | Activate agent + create wiki memory |
+| `POST` | `/api/deactivate-agent` | Deactivate + clean wiki |
+| `GET` | `/api/scan` | Scan local AI agents |
+| `WS` | `/ws` | Live data push |
 
 ## Development
 
 ```bash
-cd frontend
-npm install
-npm run dev      # Dev server with HMR
-npm run build    # Production build → ../static/
+cd frontend && npm install && npm run dev
 ```
+
+Build: `npm run build` → output to `static/`
 
 ## License
 
-MIT © 2025
-
----
-
-<p align="center">
-  <sub>Built with taste-skill design system · Dark-themed · Agent-first UX</sub>
-</p>
+MIT

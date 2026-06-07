@@ -13,6 +13,9 @@ config.json
 data/categories.json
 projects/
 
+# Wiki 记忆（自动生成）
+wiki/
+
 # 旧的静态文件
 static/css/
 static/js/
