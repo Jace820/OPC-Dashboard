@@ -1,0 +1,203 @@
+.agents-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.agent-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.agent-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.agent-card:active {
+  transform: scale(0.98);
+}
+
+/* Inactive agent */
+.agent-card.inactive {
+  opacity: 0.55;
+  border-color: rgba(255,255,255,0.04);
+}
+.agent-card.inactive:hover { opacity: 0.75; }
+
+.agent-active-toggle {
+  margin-left: auto; font-size: 14px; cursor: pointer;
+  opacity: 0.6; transition: opacity 0.2s;
+}
+.agent-active-toggle.on { opacity: 1; }
+.agent-active-toggle.off { opacity: 0.3; }
+
+.btn-setup-agent {
+  width: 100%; margin-top: 8px; padding: 8px;
+  background: rgba(76,175,80,0.12); border: 1px solid rgba(76,175,80,0.25);
+  border-radius: 6px; color: #4CAF50; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;
+  position: relative; z-index: 1;
+}
+.btn-setup-agent:hover { background: rgba(76,175,80,0.2); }
+.btn-setup-agent:disabled { opacity: 0.4; cursor: default; }
+
+.btn-deactivate-agent {
+  width: 100%; margin-top: 4px; padding: 8px;
+  background: rgba(220,38,38,0.08); border: 1px solid rgba(220,38,38,0.2);
+  border-radius: 6px; color: #ef4444; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;
+  position: relative; z-index: 1;
+}
+.btn-deactivate-agent:hover { background: rgba(220,38,38,0.16); border-color: rgba(220,38,38,0.35); }
+.btn-deactivate-agent:disabled { opacity: 0.4; cursor: default; }
+
+/* Working state */
+.agent-card.working {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.agent-particle-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.agent-card.working .agent-particle-bg {
+  opacity: 0.06;
+  background:
+    radial-gradient(circle at 35% 25%, var(--agent-color) 0%, transparent 50%),
+    radial-gradient(circle at 65% 75%, var(--agent-color) 0%, transparent 50%);
+}
+
+.agent-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.agent-avatar {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1.5px solid var(--border);
+  color: var(--agent-color, #888);
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
+.agent-initial { line-height: 1; }
+
+.agent-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.agent-name {
+  font-weight: 600;
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+.agent-role {
+  color: var(--text-secondary);
+}
+
+.agent-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  position: relative;
+  z-index: 1;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-indicator.working {
+  background: var(--color-bojack);
+  animation: statusScalePulse 1.8s ease-in-out infinite;
+}
+
+.status-indicator.idle {
+  background: var(--color-idle);
+}
+
+@keyframes statusScalePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.35); }
+}
+
+/* Ring track around working indicator */
+.status-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-bojack);
+  opacity: 0.25;
+  animation: ringPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes ringPulse {
+  0%, 100% { transform: scale(1); opacity: 0.25; }
+  50% { transform: scale(1.5); opacity: 0.0; }
+}
+
+.agent-task {
+  color: var(--text-primary);
+  background: var(--bg-panel);
+  border-radius: var(--radius-sm);
+  position: relative;
+  z-index: 1;
+  line-height: 1.5;
+}
+
+.agent-desc {
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.5;
+  position: relative;
+  z-index: 1;
+  padding: 0 2px;
+}
+
+.agent-tech {
+  display: flex; align-items: center; gap: 6px;
+  position: relative; z-index: 1;
+  margin-top: 2px;
+}
+.tech-label {
+  font-size: 10px; color: var(--text-muted);
+  background: rgba(255,255,255,0.04); border-radius: 4px;
+  padding: 2px 6px;
+}
+.tech-model {
+  font-size: 10px; color: var(--text-muted);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}

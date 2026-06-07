@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+node_modules/
+dist/
+.DS_Store
+.env
+*.log
+
+# 个人配置（使用 config.example.json 作为模板）
+config.json
+
+# 自动生成的数据
+data/categories.json
+projects/
+
+# 旧的静态文件
+static/css/
+static/js/
