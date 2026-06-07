@@ -30,18 +30,17 @@ if [ -f frontend/package.json ]; then
     echo "   → static/ updated"
 fi
 
-# Initialize wiki structure
-WIKI_PATH=$(python3 -c "import json; c=json.load(open('config.json')); print(c.get('wiki_path','./wiki'))")
-if [ ! -d "$WIKI_PATH" ]; then
-    echo "🧠 Initializing wiki memory system..."
-    mkdir -p "$WIKI_PATH"/{L3\ system,L4\ projects,L5\ pages,L6\ raw,L7\ assets}
-    echo "# Wiki Index" > "$WIKI_PATH/L1 index.md"
-    echo "# Schema" > "$WIKI_PATH/L2 schema.md"
-    echo "{}" > "$WIKI_PATH/L8 links.json"
-    echo "# Changelog" > "$WIKI_PATH/L9 CHANGELOG.md"
-    echo "# 工作流规范" > "$WIKI_PATH/L3 system/workflow.md"
-    echo '{"projects": []}' > "$WIKI_PATH/L3 system/active-tasks.json"
-    echo "   → Wiki ready at $WIKI_PATH"
+# Initialize wiki structure from template
+if [ ! -d "wiki" ]; then
+    echo "🧠 Initializing wiki memory system from template..."
+    if [ -d "wiki-template" ]; then
+        cp -r wiki-template wiki
+        echo "   → Wiki ready (9-layer architecture)"
+    else
+        mkdir -p wiki/L3\ system
+        echo '{"projects": []}' > wiki/L3\ system/active-tasks.json
+        echo "   → Wiki ready (minimal)"
+    fi
 fi
 
 echo ""

@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "layer": "L8",
+    "description": "跨层链接索引。用户激活 Agent 后自动添加 agent 相关链接。"
+  },
+  "links": [
+    {
+      "from": "L1 index.md",
+      "to": "L2 schema.md",
+      "type": "references"
+    },
+    {
+      "from": "L1 index.md",
+      "to": "L3 system/README.md",
+      "type": "references"
+    },
+    {
+      "from": "L1 index.md",
+      "to": "L4 projects/README.md",
+      "type": "references"
+    },
+    {
+      "from": "L1 index.md",
+      "to": "L5 pages/README.md",
+      "type": "references"
+    },
+    {
+      "from": "L1 index.md",
+      "to": "L6 raw/README.md",
+      "type": "references"
+    },
+    {
+      "from": "L1 index.md",
+      "to": "L7 assets/README.md",
+      "type": "references"
+    },
+    {
+      "from": "L1 index.md",
+      "to": "L8 links.json",
+      "type": "references"
+    },
+    {
+      "from": "L1 index.md",
+      "to": "L9 CHANGELOG.md",
+      "type": "references"
+    },
+    {
+      "from": "L3 system/workflow.md",
+      "to": "L2 schema.md",
+      "type": "references"
+    }
+  ]
+}

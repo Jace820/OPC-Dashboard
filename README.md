@@ -80,6 +80,7 @@ All wiki paths are configurable in `config.json`:
 opc-dashboard/
 ├── server.py              # FastAPI: REST + WebSocket + auto-sync
 ├── sync.py                # Project data sync engine
+├── wiki-template/         # 9-layer wiki architecture (copied to wiki/ on setup)
 ├── setup.sh               # One-command: install + build + wiki init
 ├── config.example.json    # Template → copy to config.json
 ├── requirements.txt       # fastapi, uvicorn

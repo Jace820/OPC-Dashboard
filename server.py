@@ -38,30 +38,25 @@ def get_wiki_path():
 
 
 def _init_wiki_structure(wiki_base: Path):
-    """初始化 wiki 九层目录结构"""
-    layers = {
-        "L1 index.md": "# Wiki Index\n\nOPC 团队共同记忆系统。\n",
-        "L2 schema.md": "# Schema\n\nWiki 结构定义。\n",
-        "L3 system": None,
-        "L4 projects": None,
-        "L5 pages": None,
-        "L6 raw": None,
-        "L7 assets": None,
-        "L8 links.json": "{}",
-        "L9 CHANGELOG.md": "# Changelog\n\n",
-    }
-    for name, content in layers.items():
-        path = wiki_base / name
-        if content is None:
-            path.mkdir(parents=True, exist_ok=True)
-        else:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(content, encoding="utf-8")
-    (wiki_base / "L3 system" / "workflow.md").write_text(
-        "# 工作流规范\n\n## 规则\n- 任务通过 active-tasks.json 分发\n- 完成后更新任务状态\n", encoding="utf-8")
-    (wiki_base / "L3 system" / "active-tasks.json").write_text(
-        '{"projects": []}', encoding="utf-8")
-    print(f"✅ Wiki 结构已初始化: {wiki_base}")
+    """从 wiki-template/ 复制完整的九层 wiki 架构"""
+    template = BASE / "wiki-template"
+    if template.exists():
+        import shutil
+        for item in template.iterdir():
+            dest = wiki_base / item.name
+            if item.is_dir():
+                if not dest.exists():
+                    shutil.copytree(item, dest)
+            else:
+                if not dest.exists():
+                    shutil.copy2(item, dest)
+        print(f"✅ Wiki 结构已从模板初始化: {wiki_base}")
+    else:
+        # 降级：最小化创建
+        wiki_base.mkdir(parents=True, exist_ok=True)
+        (wiki_base / "L3 system").mkdir(parents=True, exist_ok=True)
+        (wiki_base / "L3 system" / "active-tasks.json").write_text('{"projects": []}', encoding="utf-8")
+        print(f"⚠ Wiki 模板未找到，最小化创建: {wiki_base}")
 
 
 config = load_config()
