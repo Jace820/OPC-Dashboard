@@ -11,6 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -66,7 +67,12 @@ def _init_wiki_structure(wiki_base: Path):
 
 config = load_config()
 
-app = FastAPI(title="OPC Dashboard")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    asyncio.create_task(watch_files())
+    yield
+
+app = FastAPI(title="OPC Dashboard", lifespan=lifespan)
 
 # ── Connection Manager ──
 class ConnectionManager:
@@ -410,10 +416,6 @@ async def watch_files():
             except OSError:
                 pass
 
-
-@app.on_event("startup")
-async def startup():
-    asyncio.create_task(watch_files())
 
 # ── Root → index.html ──
 @app.get("/")

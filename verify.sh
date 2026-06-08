@@ -120,8 +120,9 @@ else
 fi
 
 # 启动测试服务（如果需要）
+SERVER_LOG=$(mktemp)
 if ! $REUSE_EXISTING; then
-    "$PYTHON" server.py &
+    "$PYTHON" server.py >"$SERVER_LOG" 2>&1 &
     SERVER_PID=$!
     if $USE_TEMP_PORT; then
         # 覆盖端口启动
@@ -129,10 +130,10 @@ if ! $REUSE_EXISTING; then
         "$PYTHON" -c "
 import uvicorn, server
 uvicorn.run(server.app, host='127.0.0.1', port=$PORT)
-" &
+" >"$SERVER_LOG" 2>&1 &
         SERVER_PID=$!
     fi
-    trap "kill $SERVER_PID 2>/dev/null; exit" EXIT
+    trap "kill $SERVER_PID 2>/dev/null; rm -f $SERVER_LOG; exit" EXIT
 
     # 等待就绪
     for i in $(seq 1 20); do
@@ -186,9 +187,59 @@ if [ -n "$CONFIG_BACKUP" ]; then
         -d "$CONFIG_BACKUP" >/dev/null 2>&1
 fi
 
+# ── 3b. 默认状态检查 ──
+echo ""
+echo "  ── 默认状态验证 ──"
+
+# 检查 /api/config 的 agents 是空 {}
+echo -n "  config.agents 为空 {} ... "
+AGENTS_EMPTY=$(curl -s "http://127.0.0.1:$PORT/api/config" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+a = d.get('agents', {})
+assert a == {}, f'agents is not empty: {a}'
+print('ok')
+" 2>/dev/null)
+if [ "$AGENTS_EMPTY" = "ok" ]; then
+    echo -e "${GREEN}✓${NC}"
+    PASS=$((PASS + 1))
+else
+    echo -e "${RED}✗${NC}"
+    FAIL=$((FAIL + 1))
+fi
+
+# 检查 /api/data 的 agents_status 是 []
+echo -n "  data.agents_status 为 [] ... "
+STATUS_EMPTY=$(curl -s "http://127.0.0.1:$PORT/api/data" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+s = d.get('agents_status', [])
+assert s == [], f'agents_status is not empty: {s}'
+print('ok')
+" 2>/dev/null)
+if [ "$STATUS_EMPTY" = "ok" ]; then
+    echo -e "${GREEN}✓${NC}"
+    PASS=$((PASS + 1))
+else
+    echo -e "${RED}✗${NC}"
+    FAIL=$((FAIL + 1))
+fi
+
+# 检查首页不包含硬编码的 Agent 名称
+echo -n "  首页不含作者个人 Agent 名称 ... "
+FORBIDDEN_NAMES="Bojack|Athena|Mercury"
+if curl -s "http://127.0.0.1:$PORT/" | grep -qE "$FORBIDDEN_NAMES"; then
+    echo -e "${RED}✗${NC}"
+    FAIL=$((FAIL + 1))
+else
+    echo -e "${GREEN}✓${NC}"
+    PASS=$((PASS + 1))
+fi
+
 # 停止测试服务（仅当我们自己启动的）
 if $KILL_ON_EXIT; then
     kill $SERVER_PID 2>/dev/null || true
+    rm -f "$SERVER_LOG" 2>/dev/null
     trap - EXIT
 else
     echo ""

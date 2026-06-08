@@ -39,16 +39,19 @@ cp config.example.json config.json
 ```
 
 **Then:**
-1. Open Settings (`⌘,`) → **Agent** tab → **🔍 扫描本地 Agent**
-2. Click to add detected agents
-3. Click **🔧 一键接入** to activate → wiki memory auto-created ✨
+1. Dashboard starts with **no agents** — the default `config.json` has empty `agents: {}`
+2. Open Settings (`⌘,`) → **Agent** tab → **🔍 扫描本地 Agent**
+3. Click to **add** detected agents to your config
+4. Toggle the **active** switch to activate → wiki memory auto-created ✨
 
 ## How Wiki Integration Works
 
 ```
-New user clones repo → setup.sh creates wiki/ structure
+New user clones repo → setup.sh creates wiki/ + copies config.json (no agents)
      ↓
-User scans agents → adds to config
+Dashboard shows empty agent list — no pre-configured personal agents
+     ↓
+User scans agents → manually adds → activates
      ↓
 Clicks "🔧 一键接入" → server auto-creates:
   wiki/L3 system/agent-{name}.md   ← agent memory file
@@ -62,6 +65,12 @@ All wiki paths are configurable in `config.json`:
 ```json
 { "wiki_path": "./wiki" }
 ```
+
+## No Default Agents
+
+This dashboard does **not** ship with any pre-configured agents. The default
+`config.json` has `"agents": {}`. You control exactly which AI agents appear
+by scanning and adding them through the Settings panel.
 
 ## Features
 

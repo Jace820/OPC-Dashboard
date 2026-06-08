@@ -97,37 +97,30 @@ export default function App() {
 
   // Cleanup toast timer on unmount
   useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
-  // 合并 agents_status 和 config.agents，新增 Agent 立即显示
+  // 只显示 config.agents 中的 Agent，用 agents_status 补充工作状态
   const enrichedAgents = (() => {
     const cfgAgents = config.agents || {};
-    const seen = new Set();
-    const result = [];
-    // 1. API 返回的 agents_status（包含工作状态）
+    const statusMap = {};
     for (const a of data.agents_status) {
-      const cfg = cfgAgents[a.id] || {};
+      statusMap[a.id] = a;
+    }
+    const result = [];
+    for (const [id, cfg] of Object.entries(cfgAgents)) {
+      const st = statusMap[id] || {};
       result.push({
-        ...a,
-        name: cfg.name ?? a.name,
-        role: cfg.role ?? a.role,
-        icon: cfg.icon ?? a.icon,
-        color: cfg.color ?? a.color,
-        desc: cfg.desc ?? a.desc,
-        model: cfg.model ?? a.model,
-        provider: cfg.provider ?? a.provider,
+        id,
+        name: cfg.name,
+        role: cfg.role,
+        icon: cfg.icon,
+        color: cfg.color,
+        status: st.status || 'idle',
+        task: st.task || '',
+        project: st.project || '',
+        desc: cfg.desc,
+        model: cfg.model,
+        provider: cfg.provider,
         active: cfg.active !== false,
       });
-      seen.add(a.id);
-    }
-    // 2. config 中有但 agents_status 中没有的 Agent（新添加的，显示为空闲）
-    for (const [id, cfg] of Object.entries(cfgAgents)) {
-      if (!seen.has(id)) {
-        result.push({
-          id, name: cfg.name, role: cfg.role, icon: cfg.icon, color: cfg.color,
-          status: 'idle', task: '', project: '',
-          desc: cfg.desc, model: cfg.model, provider: cfg.provider,
-          active: cfg.active !== false,
-        });
-      }
     }
     return result;
   })();

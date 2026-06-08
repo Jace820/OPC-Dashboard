@@ -30,14 +30,8 @@ def get_share_path():
 
 
 def write_empty_data():
-    """写入空的 categories 和默认 agents_status"""
-    agents_status = [
-        {"id": "bojack",  "name": "Bojack",  "role": "协调员", "icon": "🎯", "color": "#FFAB40", "status": "idle", "task": "", "project": ""},
-        {"id": "athena",  "name": "Athena",  "role": "研究员", "icon": "🔬", "color": "#00E5FF", "status": "idle", "task": "", "project": ""},
-        {"id": "mercury", "name": "Mercury", "role": "作家",   "icon": "✍️", "color": "#B388FF", "status": "idle", "task": "", "project": ""},
-        {"id": "codex",   "name": "Codex",   "role": "建造者", "icon": "🔨", "color": "#69F0AE", "status": "idle", "task": "", "project": ""},
-    ]
-    output = {"categories": [], "agents_status": agents_status}
+    """写入空的 categories 和 agents_status"""
+    output = {"categories": [], "agents_status": []}
     DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
     with open(DATA_FILE, "w") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
@@ -191,15 +185,22 @@ def sync():
                 "projects": s["projects"],
             })
 
-    # 构建 Agent 状态（从活跃项目推导）
-    agents_status = {
-        "bojack":  {"id": "bojack",  "name": "Bojack",  "role": "协调员", "icon": "🎯", "color": "#FFAB40", "status": "idle", "task": "", "project": ""},
-        "athena":  {"id": "athena",  "name": "Athena",  "role": "研究员", "icon": "🔬", "color": "#00E5FF", "status": "idle", "task": "", "project": ""},
-        "mercury": {"id": "mercury", "name": "Mercury", "role": "作家",   "icon": "✍️", "color": "#B388FF", "status": "idle", "task": "", "project": ""},
-        "codex":   {"id": "codex",   "name": "Codex",   "role": "建造者", "icon": "🔨", "color": "#69F0AE", "status": "idle", "task": "", "project": ""},
-    }
-    # 别名映射：「Claude」同时激活 Athena 和 Mercury（两者都是 Claude Code 实例）
-    ALIAS_MAP = {"claude": ["athena", "mercury"]}
+    # 构建 Agent 状态：从 config.json.agents 初始化，再根据活跃项目更新工作状态
+    cfg = load_config()
+    cfg_agents = cfg.get("agents", {})
+    agents_status = {}
+    for aid, agent_info in cfg_agents.items():
+        agents_status[aid] = {
+            "id": aid,
+            "name": agent_info.get("name", aid),
+            "role": agent_info.get("role", ""),
+            "icon": agent_info.get("icon", "📦"),
+            "color": agent_info.get("color", "#888"),
+            "status": "idle",
+            "task": "",
+            "project": "",
+        }
+    # 从活跃项目推导工作状态（按名称匹配）
     for cat in categories:
         for proj in cat["projects"]:
             if proj["progress"] < 100:
@@ -212,12 +213,19 @@ def sync():
                             agents_status[aid]["task"] = f'{proj["name"]} — {proj["current_stage"]}中'
                             agents_status[aid]["project"] = proj["name"]
                             matched = True
-                    # 别名：例如 Claude → Athena + Mercury
-                    if not matched and agent_name_lower in ALIAS_MAP:
-                        for alias_aid in ALIAS_MAP[agent_name_lower]:
-                            agents_status[alias_aid]["status"] = "working"
-                            agents_status[alias_aid]["task"] = f'{proj["name"]} — {proj["current_stage"]}中'
-                            agents_status[alias_aid]["project"] = proj["name"]
+                    if not matched:
+                        # 项目中有但 config 没有的 Agent，用项目数据创建临时状态
+                        tmp_id = f"proj-{agent['name'].lower()}"
+                        agents_status[tmp_id] = {
+                            "id": tmp_id,
+                            "name": agent["name"],
+                            "role": "",
+                            "icon": "📦",
+                            "color": "#888",
+                            "status": "working",
+                            "task": f'{proj["name"]} — {proj["current_stage"]}中',
+                            "project": proj["name"],
+                        }
 
     # 写入（对象格式：{categories, agents_status}）
     output = {"categories": categories, "agents_status": list(agents_status.values())}

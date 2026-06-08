@@ -21,6 +21,15 @@ NC='\033[0m'
 echo "═══ OPC Dashboard 部署 ═══"
 echo ""
 
+# ── Step 0: 配置文件 ──
+if [ ! -f config.json ]; then
+    if [ -f config.example.json ]; then
+        echo "→ 未找到 config.json，从 config.example.json 复制..."
+        cp config.example.json config.json
+        echo "  ✓ config.json 已创建（默认无 Agent）"
+    fi
+fi
+
 # ── Step 1: Python 虚拟环境 ──
 echo "【1】Python 环境"
 if [ ! -d "$VENV_DIR" ]; then

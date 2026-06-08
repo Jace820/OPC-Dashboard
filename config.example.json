@@ -10,26 +10,5 @@
     {"id": "tools",  "name": "工具与集成",      "icon": "T"},
     {"id": "opc",    "name": "OPC 团队",         "icon": "O"}
   ],
-  "agents": {
-    "bojack": {
-      "name": "Bojack",
-      "role": "协调员",
-      "icon": "🎯",
-      "color": "#FFAB40",
-      "model": "deepseek-v4-pro",
-      "provider": "DeepSeek",
-      "desc": "拆解任务、派活把关、串联流程",
-      "active": true
-    },
-    "codex": {
-      "name": "Codex",
-      "role": "建造者",
-      "icon": "🔨",
-      "color": "#69F0AE",
-      "model": "deepseek-v4-pro",
-      "provider": "DeepSeek",
-      "desc": "实现、调试、测试、交付",
-      "active": true
-    }
-  }
+  "agents": {}
 }
