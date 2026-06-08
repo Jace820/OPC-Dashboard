@@ -105,7 +105,17 @@ export default function App() {
     // 1. API 返回的 agents_status（包含工作状态）
     for (const a of data.agents_status) {
       const cfg = cfgAgents[a.id] || {};
-      result.push({ ...a, name: cfg.name, role: cfg.role, icon: cfg.icon, color: cfg.color, desc: cfg.desc, model: cfg.model, provider: cfg.provider, active: cfg.active !== false });
+      result.push({
+        ...a,
+        name: cfg.name ?? a.name,
+        role: cfg.role ?? a.role,
+        icon: cfg.icon ?? a.icon,
+        color: cfg.color ?? a.color,
+        desc: cfg.desc ?? a.desc,
+        model: cfg.model ?? a.model,
+        provider: cfg.provider ?? a.provider,
+        active: cfg.active !== false,
+      });
       seen.add(a.id);
     }
     // 2. config 中有但 agents_status 中没有的 Agent（新添加的，显示为空闲）

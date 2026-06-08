@@ -34,7 +34,7 @@ git clone https://github.com/Jace820/OPC-Dashboard.git
 cd OPC-Dashboard
 cp config.example.json config.json
 ./setup.sh
-python3 server.py
+.venv/bin/python3 server.py
 # Open http://localhost:8090
 ```
 
@@ -83,7 +83,7 @@ opc-dashboard/
 ├── wiki-template/         # 9-layer wiki architecture (copied to wiki/ on setup)
 ├── setup.sh               # One-command: install + build + wiki init
 ├── config.example.json    # Template → copy to config.json
-├── requirements.txt       # fastapi, uvicorn
+├── requirements.txt       # fastapi, uvicorn[standard], pyyaml
 ├── wiki/                  # Auto-generated wiki memory (gitignored)
 └── frontend/              # Vite + React
     ├── src/

@@ -1,13 +1,35 @@
 {
-  "port": 8090,
-  "host": "0.0.0.0",
-  "refresh_interval": 2,
   "theme": "dark",
-  "animations": true,
-  "auto_sync": true,
-  "wiki_path": "./wiki",
-  "agents": {},
+  "host": "0.0.0.0",
+  "port": 8090,
+  "share_space_path": "~/Documents/Share space/projects.json",
+  "claude_md_sync": false,
   "categories": [
-    { "id": "default", "name": "默认分类", "icon": "D" }
-  ]
+    {"id": "hermes", "name": "Hermes 核心生态", "icon": "H"},
+    {"id": "skills", "name": "技能与自动化",    "icon": "S"},
+    {"id": "tools",  "name": "工具与集成",      "icon": "T"},
+    {"id": "opc",    "name": "OPC 团队",         "icon": "O"}
+  ],
+  "agents": {
+    "bojack": {
+      "name": "Bojack",
+      "role": "协调员",
+      "icon": "🎯",
+      "color": "#FFAB40",
+      "model": "deepseek-v4-pro",
+      "provider": "DeepSeek",
+      "desc": "拆解任务、派活把关、串联流程",
+      "active": true
+    },
+    "codex": {
+      "name": "Codex",
+      "role": "建造者",
+      "icon": "🔨",
+      "color": "#69F0AE",
+      "model": "deepseek-v4-pro",
+      "provider": "DeepSeek",
+      "desc": "实现、调试、测试、交付",
+      "active": true
+    }
+  }
 }

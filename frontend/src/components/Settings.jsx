@@ -48,7 +48,11 @@ export default function Settings({ isOpen, onClose, config, onSave }) {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (res.ok) { setLocal(data); if (onSave) onSave(data); }
+      if (res.ok) {
+        const merged = await res.json();
+        setLocal(merged);
+        if (onSave) onSave(merged);
+      }
     } catch (e) { console.error(e); }
     setSaving(false);
   };
@@ -90,7 +94,6 @@ export default function Settings({ isOpen, onClose, config, onSave }) {
   const removeAgent = async (id) => {
     const next = { ...(local.agents || {}) };
     delete next[id];
-    if (Object.keys(next).length === 0) return;
     // 同时调用 deactivate 清理 wiki
     await fetch('/api/deactivate-agent', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
