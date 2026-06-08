@@ -1,21 +1,7 @@
+.venv/
+.npm-cache/
+frontend/node_modules/
 __pycache__/
 *.pyc
-node_modules/
-dist/
-.DS_Store
-.env
-*.log
-
-# 个人配置（使用 config.example.json 作为模板）
-config.json
-
-# 自动生成的数据
-data/categories.json
+data/
 projects/
-
-# Wiki 记忆（自动生成）
-wiki/
-
-# 旧的静态文件
-static/css/
-static/js/

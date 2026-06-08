@@ -1,0 +1,81 @@
+{
+  "theme": "dark",
+  "host": "0.0.0.0",
+  "port": 8090,
+  "share_space_path": "~/Documents/Share space/projects.json",
+  "claude_md_sync": false,
+  "categories": [
+    {
+      "id": "hermes",
+      "name": "Hermes 核心生态",
+      "icon": "H"
+    },
+    {
+      "id": "skills",
+      "name": "技能与自动化",
+      "icon": "S"
+    },
+    {
+      "id": "tools",
+      "name": "工具与集成",
+      "icon": "T"
+    },
+    {
+      "id": "opc",
+      "name": "OPC 团队",
+      "icon": "O"
+    }
+  ],
+  "agents": {
+    "bojack": {
+      "name": "Bojack",
+      "role": "协调员",
+      "icon": "🎯",
+      "color": "#FFAB40",
+      "model": "deepseek-v4-pro",
+      "provider": "DeepSeek",
+      "desc": "拆解任务、派活把关、串联流程",
+      "active": true
+    },
+    "athena": {
+      "name": "Athena",
+      "role": "研究员",
+      "icon": "🔬",
+      "color": "#00E5FF",
+      "model": "deepseek-v4-flash",
+      "provider": "DeepSeek (ccswitch)",
+      "desc": "多源验证、标记不确定性、降低幻觉",
+      "active": true
+    },
+    "mercury": {
+      "name": "Mercury",
+      "role": "作家",
+      "icon": "✍️",
+      "color": "#B388FF",
+      "model": "deepseek-v4-flash",
+      "provider": "DeepSeek (ccswitch)",
+      "desc": "提炼主线、搭建结构、准确优先于文采",
+      "active": true
+    },
+    "codex": {
+      "name": "Codex",
+      "role": "建造者",
+      "icon": "🔨",
+      "color": "#69F0AE",
+      "model": "deepseek-v4-pro",
+      "provider": "DeepSeek (ccswitch)",
+      "desc": "实现、调试、测试、交付",
+      "active": true
+    },
+    "aider-1780821822818": {
+      "name": "Aider",
+      "role": "结对编程",
+      "icon": "🤝",
+      "color": "#FF6B6B",
+      "model": "deepseek-v4-flash",
+      "provider": "DeepSeek (ccswitch)",
+      "desc": "AI 结对编程助手",
+      "active": false
+    }
+  }
+}

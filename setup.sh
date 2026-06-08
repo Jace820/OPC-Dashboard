@@ -1,55 +1,38 @@
-#!/bin/bash
-# OPC Dashboard — One-command setup
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-echo "╔══════════════════════════════════════╗"
-echo "║   OPC Dashboard — Setup             ║"
-echo "╚══════════════════════════════════════╝"
+# ── OPC Dashboard 一键部署脚本 ──
+# 使用项目内 .venv，不污染系统 Python
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
+
+VENV_DIR="$SCRIPT_DIR/.venv"
+
+echo "═══ OPC Dashboard 部署 ═══"
 echo ""
 
-# Config
-if [ ! -f config.json ]; then
-    echo "📝 Creating config.json from template..."
-    cp config.example.json config.json
+# ── Step 1: 创建虚拟环境 ──
+if [ ! -d "$VENV_DIR" ]; then
+    echo "→ 创建 .venv 虚拟环境..."
+    python3 -m venv "$VENV_DIR"
+else
+    echo "→ .venv 已存在，跳过创建"
 fi
 
-# Python dependencies
-echo "📦 Installing Python dependencies..."
+# ── Step 2: 激活并安装依赖 ──
+echo "→ 安装 Python 依赖（仅项目内）..."
+source "$VENV_DIR/bin/activate"
+pip install --upgrade pip -q
 pip install -r requirements.txt -q
 
-# Node.js dependencies
-if [ -f frontend/package.json ]; then
-    echo "📦 Installing frontend dependencies..."
-    cd frontend && npm install --silent && cd ..
-fi
-
-# Build frontend
-if [ -f frontend/package.json ]; then
-    echo "🔨 Building frontend..."
-    cd frontend && npm run build && cd ..
-    echo "   → static/ updated"
-fi
-
-# Initialize wiki structure from template
-if [ ! -d "wiki" ]; then
-    echo "🧠 Initializing wiki memory system from template..."
-    if [ -d "wiki-template" ]; then
-        cp -r wiki-template wiki
-        echo "   → Wiki ready (9-layer architecture)"
-    else
-        mkdir -p wiki/L3\ system
-        echo '{"projects": []}' > wiki/L3\ system/active-tasks.json
-        echo "   → Wiki ready (minimal)"
-    fi
-fi
-
 echo ""
-echo "✅ Setup complete!"
+echo "✅ 部署完成！"
 echo ""
-echo "   Start:  python3 server.py"
-echo "   Open:   http://localhost:8090"
+echo "启动 Dashboard："
+echo "  source .venv/bin/activate && python3 server.py"
 echo ""
-echo "   Next steps:"
-echo "   1. Start server: python3 server.py"
-echo "   2. Open Settings → Agent → 扫描本地 Agent"
-echo "   3. Add agents → 一键接入 → 自动激活 wiki 记忆"
+echo "或直接："
+echo "  .venv/bin/python3 server.py"
+echo ""
+echo "访问: http://localhost:$(python3 -c "import json;print(json.load(open('config.json','r')).get('port',8090))")"

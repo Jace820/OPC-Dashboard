@@ -19,14 +19,19 @@ BASE = Path(__file__).resolve().parent
 DATA_FILE = BASE / "data" / "categories.json"
 STATIC_DIR = BASE / "static"
 CONFIG_FILE = BASE / "config.json"
-SHARE_PROJECTS = Path.home() / "Documents" / "Share space" / "projects.json"
 SYNC_SCRIPT = BASE / "sync.py"
+
+
+def get_share_projects_path():
+    """从 config.json 读取 Share space 项目文件路径"""
+    raw = load_config().get("share_space_path", "~/Documents/Share space/projects.json")
+    return Path(os.path.expanduser(raw))
 
 # Load config
 def load_config():
     if CONFIG_FILE.exists():
         return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
-    return {"port": 8090, "host": "0.0.0.0", "theme": "dark"}
+    return {"port": 8090, "host": "0.0.0.0", "theme": "dark", "claude_md_sync": False}
 
 def get_wiki_path():
     """从 config 读取 wiki 路径，默认 ./wiki"""
@@ -105,11 +110,15 @@ async def save_config(data: dict):
     # 深度合并一级 key
     for key, value in data.items():
         if key == "agents":
-            # agents 只更新传入的，不删除已有的
-            if isinstance(value, dict) and "agents" in current:
-                current["agents"].update(value)
-            else:
-                current["agents"] = value
+            # agents 支持增量更新和完全替换
+            # 传入 {} 表示清空所有 Agent，传入非空则合并更新
+            if isinstance(value, dict):
+                if not value:
+                    current["agents"] = {}
+                elif "agents" in current:
+                    current["agents"].update(value)
+                else:
+                    current["agents"] = value
         elif key == "categories":
             if isinstance(value, list):
                 current["categories"] = value
@@ -118,6 +127,7 @@ async def save_config(data: dict):
     CONFIG_FILE.write_text(json.dumps(current, ensure_ascii=False, indent=2), encoding="utf-8")
     global config
     config = current
+    return current
 
 
 @app.get("/api/scan")
@@ -257,16 +267,17 @@ OPC 团队正式成员。已接入 wiki 共同记忆系统。
 遵守 L3 system/workflow.md 的协作规范。
 """, encoding="utf-8")
 
-    # 如果是 Claude Code agent，更新 CLAUDE.md
-    claude_config = Path.home() / ".claude" / "CLAUDE.md"
-    if claude_config.exists():
-        content = claude_config.read_text()
-        marker = f"## Agent: {agent_name}"
-        if marker not in content:
-            content += f"\n\n{marker}\nOPC 团队成员。通过 active-tasks.json 接收任务。\n"
-            claude_config.write_text(content)
+    # 如果开启 claude_md_sync 且是 Claude Code agent，更新 CLAUDE.md
+    if cfg.get("claude_md_sync"):
+        claude_config = Path.home() / ".claude" / "CLAUDE.md"
+        if claude_config.exists():
+            content = claude_config.read_text()
+            marker = f"## Agent: {agent_name}"
+            if marker not in content:
+                content += f"\n\n{marker}\nOPC 团队成员。通过 active-tasks.json 接收任务。\n"
+                claude_config.write_text(content)
 
-    return {"status": "ok", "message": f"{agent_name} 已激活，wiki 记忆系统已接入"}
+    return {"status": "ok", "message": f"{agent_name} 已激活"}
 
 
 @app.patch("/api/agent/{agent_id}")
@@ -316,15 +327,16 @@ async def deactivate_agent(data: dict):
             except OSError:
                 pass
 
-    # 从 CLAUDE.md 中移除对应 agent 的行
-    claude_config = Path.home() / ".claude" / "CLAUDE.md"
-    if claude_config.exists():
-        lines = claude_config.read_text(encoding="utf-8").splitlines()
-        filtered = [
-            line for line in lines
-            if agent_id not in line and agent_name not in line
-        ]
-        claude_config.write_text("\n".join(filtered) + "\n", encoding="utf-8")
+    # 如果开启 claude_md_sync，从 CLAUDE.md 中移除对应 agent 的行
+    if cfg.get("claude_md_sync"):
+        claude_config = Path.home() / ".claude" / "CLAUDE.md"
+        if claude_config.exists():
+            lines = claude_config.read_text(encoding="utf-8").splitlines()
+            filtered = [
+                line for line in lines
+                if agent_id not in line and agent_name not in line
+            ]
+            claude_config.write_text("\n".join(filtered) + "\n", encoding="utf-8")
 
     return {"ok": True, "agent_id": agent_id, "message": "Agent deactivated and wiki cleaned"}
 
@@ -371,9 +383,10 @@ async def watch_files():
         await asyncio.sleep(2)
 
         # 1. Check Share space projects.json for external changes
-        if SHARE_PROJECTS.exists():
+        share_path = get_share_projects_path()
+        if share_path.exists():
             try:
-                pmtime = os.stat(SHARE_PROJECTS).st_mtime
+                pmtime = os.stat(share_path).st_mtime
                 if _last_projects_mtime is None:
                     _last_projects_mtime = pmtime
                 elif pmtime != _last_projects_mtime:
@@ -412,4 +425,4 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8090)
+    uvicorn.run(app, host=config.get("host", "0.0.0.0"), port=config.get("port", 8090))

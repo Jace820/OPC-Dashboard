@@ -7,9 +7,41 @@ OPC Dashboard 项目同步脚本 v2
 import json
 import os
 from datetime import datetime
+from pathlib import Path
 
-SHARE = os.path.expanduser("~/Documents/Share space/projects.json")
-DASHBOARD = os.path.expanduser("~/Documents/Hermes/workspace/opc-dashboard/projects")
+BASE = Path(__file__).resolve().parent
+CONFIG_FILE = BASE / "config.json"
+DASHBOARD = BASE / "projects"
+DATA_FILE = BASE / "data" / "categories.json"
+
+
+def load_config():
+    """读取 config.json，返回 dict"""
+    if CONFIG_FILE.exists():
+        return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+    return {}
+
+
+def get_share_path():
+    """从 config.json 读取 share_space_path，展开 ~ 并返回 Path"""
+    cfg = load_config()
+    raw = cfg.get("share_space_path", "~/Documents/Share space/projects.json")
+    return Path(os.path.expanduser(raw))
+
+
+def write_empty_data():
+    """写入空的 categories 和默认 agents_status"""
+    agents_status = [
+        {"id": "bojack",  "name": "Bojack",  "role": "协调员", "icon": "🎯", "color": "#FFAB40", "status": "idle", "task": "", "project": ""},
+        {"id": "athena",  "name": "Athena",  "role": "研究员", "icon": "🔬", "color": "#00E5FF", "status": "idle", "task": "", "project": ""},
+        {"id": "mercury", "name": "Mercury", "role": "作家",   "icon": "✍️", "color": "#B388FF", "status": "idle", "task": "", "project": ""},
+        {"id": "codex",   "name": "Codex",   "role": "建造者", "icon": "🔨", "color": "#69F0AE", "status": "idle", "task": "", "project": ""},
+    ]
+    output = {"categories": [], "agents_status": agents_status}
+    DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(DATA_FILE, "w") as f:
+        json.dump(output, f, ensure_ascii=False, indent=2)
+    print(f"  已写入空数据 → {DATA_FILE}")
 
 # 项目分类映射
 CATEGORY_MAP = {
@@ -60,6 +92,15 @@ def make_stages(total, done):
 
 
 def sync():
+    SHARE = get_share_path()
+
+    if not SHARE.exists():
+        print(f"⚠ Share space 项目文件不存在: {SHARE}")
+        print("  写入空数据，Dashboard 将以空白状态运行。")
+        print("  如需导入项目，请将 projects.json 放到上述路径，或在 config.json 中修改 share_space_path。")
+        write_empty_data()
+        return
+
     with open(SHARE) as f:
         projects = json.load(f)
 
@@ -118,9 +159,9 @@ def sync():
             "synced_at": datetime.now().isoformat(),
         }
 
-        project_dir = os.path.join(DASHBOARD, pid)
+        project_dir = DASHBOARD / pid
         os.makedirs(project_dir, exist_ok=True)
-        with open(os.path.join(project_dir, "status.json"), "w") as f:
+        with open(project_dir / "status.json", "w") as f:
             json.dump(status, f, ensure_ascii=False, indent=2)
 
         # 汇总分类
@@ -180,14 +221,12 @@ def sync():
 
     # 写入（对象格式：{categories, agents_status}）
     output = {"categories": categories, "agents_status": list(agents_status.values())}
-    data_dir = os.path.join(os.path.dirname(DASHBOARD), "data")
-    os.makedirs(data_dir, exist_ok=True)
-    cat_path = os.path.join(data_dir, "categories.json")
-    with open(cat_path, "w") as f:
+    DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(DATA_FILE, "w") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
 
     print(f"\n共同步 {len(projects)} 个项目 → {DASHBOARD}")
-    print(f"生成 {len(categories)} 个分类 → {cat_path}")
+    print(f"生成 {len(categories)} 个分类 → {DATA_FILE}")
 
     # Legacy: inline build is no longer needed (use server.py instead)
     # To use old static build: python3 build.py
